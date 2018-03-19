@@ -10,6 +10,9 @@ from lasso_ir.constants import MULTIPROCESSING
 
 
 class BaseAlgorithm:
+    """
+    Base algorithm, defines most of the necessary methods. Implements passive/random search.
+    """
     name = "random"
 
     def __init__(self, seed):
@@ -42,6 +45,10 @@ class BaseAlgorithm:
 
 
 class NearestNeighbor(BaseAlgorithm):
+    """
+    For each query, picks a random positive example seen so far and finds the closest unlabeled example to that.
+    The base NN algorithm uses all features, but LassoNN reimplements "select_features"
+    """
     name = "nn"
 
     def get_query(self):
@@ -56,6 +63,9 @@ class NearestNeighbor(BaseAlgorithm):
 
 
 class NLogisticRegression(LogisticRegression):
+    """
+    A version of Logistic Regression that keeps track of an extra parameter N (used for maximum_sparsity scoring) and how many examples were used to train it.
+    """
     def __init__(self, N, penalty, class_weight, C=.1):
         self.N = N
         super().__init__(penalty=penalty, class_weight=class_weight, C=C)
@@ -66,6 +76,9 @@ class NLogisticRegression(LogisticRegression):
 
 
 class LassoNN(NearestNeighbor):
+    """
+    Nearest Neighbor but uses LASSO to select the features
+    """
     name = "nn-lasso"
 
     def __init__(self, seed, N=1):
@@ -105,6 +118,9 @@ class LassoNN(NearestNeighbor):
 
 
 class NLassoNN(LassoNN):
+    """
+    LassoNN but requires number of nonzero features to be no larger than (number of training examples / self.N)
+    """
     def scoring(self):
         return maximum_sparsity
 
