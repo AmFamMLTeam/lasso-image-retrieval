@@ -1,0 +1,6 @@
+h5py==2.7.1
+numpy==1.13.3
+scikit-learn==0.19.1
+matplotlib==2.1.1
+tqdm==4.19.6
+scipy==1.0.0
