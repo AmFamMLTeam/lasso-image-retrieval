@@ -94,6 +94,30 @@ class MargionalNN(NearestNeighbor):
             return{"coefs": np.ravel(np.argwhere(self.mask)).tolist(), "n_nonzero": np.count_nonzero(self.mask)}
 
 
+class MargionalNNPlus(MargionalNN):
+    @property
+    def name(self):
+        return f"nn-marginalplus-{self.N}"
+
+    def select_features(self):
+        labeled = list(self.answers.keys())
+        n_trained = len(self.answers)
+        n_positive = sum(self.answers.values())
+        n_negative = n_trained - n_positive
+        n_sample = n_positive - n_negative
+        unlabeled_sample = []
+        if 0 < n_sample <= len(self.unlabeled):
+            unlabeled_sample = random.sample(self.unlabeled, n_sample)
+        sample = labeled + unlabeled_sample
+        _y = [self.answers.get(i, 0) for i in sample]  # default to 0
+        if can_fit(_y):
+            _X = X[sample]
+            self.mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
+            return X[:, self.mask]
+        else:
+            return X
+
+
 class LassoNN(NearestNeighbor):
     """
     Nearest Neighbor but uses LASSO to select the features

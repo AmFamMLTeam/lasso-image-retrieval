@@ -1,14 +1,20 @@
-
 from sklearn.base import RegressorMixin
 from sklearn.linear_model.base import LinearModel
 from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import NotFittedError
+from sklearn import preprocessing
 import numpy as np
+import warnings
 
 
 class MarginalRegression(LinearModel, RegressorMixin):
     def fit(self, X, y):
         self.n_trained = len(y)
+        # scale gives zero mean and unit variance
+        X /= np.max(X)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', UserWarning)
+            X = preprocessing.scale(X)
         self.coef_ = np.dot(X.T, y)
         return self
 
