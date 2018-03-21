@@ -8,9 +8,9 @@ MACHINES = {0, 1, 8, 9}
 
 # These are the constants you want to play with
 ###
-MAX_N_CIFAR_TRAIN = 2000
+MAX_N_CIFAR_TRAIN = 50000
 CIFAR_POSITIVE_CLASSES = CATS
-MULTIPROCESSING = False
+MULTIPROCESSING = True
 ###
 
 PACKAGE_DIR = os.path.abspath(os.path.dirname(__file__))

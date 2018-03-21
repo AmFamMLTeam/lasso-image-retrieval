@@ -29,7 +29,7 @@ EXP_FIGURE = args.output + "plot.png"
 seed = random.choice(np.where(y == 1)[0])
 
 # Set up your algorithms here
-algs = [BaseAlgorithm(seed), NearestNeighbor(seed), LassoNN(seed), NLassoNN(seed, 2), MargionalNN(seed), MargionalNN(seed, 2)]
+algs = [BaseAlgorithm(seed), NearestNeighbor(seed), LassoNN(seed), NLassoNN(seed, 2), NLassoNN(seed, 3), MargionalNN(seed), MargionalNN(seed, 2), MargionalNN(seed, 3)]
 
 exp = Experiment(algs)
 

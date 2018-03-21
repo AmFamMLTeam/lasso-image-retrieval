@@ -15,7 +15,7 @@ class Experiment:
         self.history = {alg.name: [] for alg in self.algorithms}
         self.alg_history = {alg.name: [] for alg in self.algorithms}
         self.history["n_queries"] = []
-        self.pool = Pool(len(algorithms))
+        self.pool = Pool(min(len(algorithms), 4))
 
     def get_query(self):
 
