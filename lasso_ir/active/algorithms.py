@@ -1,12 +1,12 @@
 import random
 
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GridSearchCV
 
 from lasso_ir.features import X, y
 from lasso_ir.constants import MULTIPROCESSING
+from lasso_ir.models import NLogisticRegression, MarginalRegression
 
 
 class BaseAlgorithm:
@@ -62,17 +62,21 @@ class NearestNeighbor(BaseAlgorithm):
         return self.unlabeled[best]
 
 
-class NLogisticRegression(LogisticRegression):
-    """
-    A version of Logistic Regression that keeps track of an extra parameter N (used for maximum_sparsity scoring) and how many examples were used to train it.
-    """
-    def __init__(self, N, penalty, class_weight, C=.1):
+class MargionalNN(NearestNeighbor):
+    def __init__(self, seed, N=1):
         self.N = N
-        super().__init__(penalty=penalty, class_weight=class_weight, C=C)
+        super().__init__(seed)
 
-    def fit(self, _X, _y, sample_weight=None):
-        self.n_trained = len(_y)
-        super().fit(_X, _y, sample_weight)
+    def select_features(self):
+        labeled = list(self.answers.keys())
+        _y = list(self.answers.values())
+        if can_fit(_y):
+            n_trained = len(_y)
+            _X = X[labeled]
+            mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
+            return X[:, mask]
+        else:
+            return X
 
 
 class LassoNN(NearestNeighbor):
