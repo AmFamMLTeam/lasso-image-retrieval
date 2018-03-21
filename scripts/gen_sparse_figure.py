@@ -5,6 +5,7 @@ import json
 from lasso_ir.constants import EXP_FIGURE
 import argparse
 import sys
+import numpy as np
 
 parser = argparse.ArgumentParser(description="A script to generate a plot of sparsity of features vs number of queries.")
 
@@ -22,7 +23,7 @@ n_queries = history["n_positive"]["n_queries"]
 history = history["alg_meta"]
 
 for alg, alg_meta in history.items():
-    if alg == "nn":
+    if alg in {"nn", "random"}:
         continue
     n_nonzero = map(lambda x: x or 0, map(lambda x: x["n_nonzero"], alg_meta))
     plt.plot(n_queries, list(n_nonzero), label=alg)

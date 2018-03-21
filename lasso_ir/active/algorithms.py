@@ -63,8 +63,13 @@ class NearestNeighbor(BaseAlgorithm):
 
 
 class MargionalNN(NearestNeighbor):
+    """
+    Nearest Neighbor but uses Marginal Regression to select the features.
+    Will select n_trained/N features, (N=1 by default)
+    """
     def __init__(self, seed, N=1):
         self.N = N
+        self.mask = None
         super().__init__(seed)
 
     def select_features(self):
@@ -73,10 +78,20 @@ class MargionalNN(NearestNeighbor):
         if can_fit(_y):
             n_trained = len(_y)
             _X = X[labeled]
-            mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
-            return X[:, mask]
+            self.mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
+            return X[:, self.mask]
         else:
             return X
+
+    @property
+    def name(self):
+        return f"nn-marginal-{self.N}"
+
+    def get_snapshot(self):
+        if self.mask is None:
+            return {"coefs": None, "n_nonzero": None}
+        else:
+            return{"coefs": np.ravel(np.argwhere(self.mask)).tolist(), "n_nonzero": np.count_nonzero(self.mask)}
 
 
 class LassoNN(NearestNeighbor):

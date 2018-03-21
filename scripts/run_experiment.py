@@ -1,6 +1,6 @@
 
 from lasso_ir.active.experiment import Experiment
-from lasso_ir.active.algorithms import NearestNeighbor, LassoNN, BaseAlgorithm, NLassoNN
+from lasso_ir.active.algorithms import NearestNeighbor, LassoNN, BaseAlgorithm, NLassoNN, MargionalNN
 from lasso_ir.constants import OUTPUT_PREFIX
 import numpy as np
 import random
@@ -29,7 +29,7 @@ EXP_FIGURE = args.output + "plot.png"
 seed = random.choice(np.where(y == 1)[0])
 
 # Set up your algorithms here
-algs = [NearestNeighbor(seed), LassoNN(seed), NLassoNN(seed, 2), NLassoNN(seed, 3), NLassoNN(seed, .5), NLassoNN(seed, 6)]
+algs = [BaseAlgorithm(seed), NearestNeighbor(seed), LassoNN(seed), NLassoNN(seed, 2), MargionalNN(seed), MargionalNN(seed, 2)]
 
 exp = Experiment(algs)
 
