@@ -2,6 +2,7 @@ data/
 *.png
 *history.json
 .idea/
+logs/
 
 ### Python template
 # Byte-compiled / optimized / DLL files
