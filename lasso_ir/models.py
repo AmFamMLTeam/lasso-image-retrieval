@@ -10,6 +10,8 @@ import warnings
 class MarginalRegression(LinearModel, RegressorMixin):
     def fit(self, X, y):
         self.n_trained = len(y)
+        y = np.array(y)
+        y[y == 0] = -1
         # scale gives zero mean and unit variance
         X /= np.max(X)
         with warnings.catch_warnings():

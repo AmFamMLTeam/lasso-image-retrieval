@@ -11,6 +11,7 @@ MACHINES = {0, 1, 8, 9}
 MAX_N_CIFAR_TRAIN = 500
 CIFAR_POSITIVE_CLASSES = CATS
 MULTIPROCESSING = False
+DOWNSAMPLE_POSITIVE = 10  # e.g. 10 to downsample to 1/10th the number of positive examples
 ###
 
 PACKAGE_DIR = os.path.abspath(os.path.dirname(__file__))

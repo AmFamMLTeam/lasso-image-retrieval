@@ -27,6 +27,8 @@ pretty_names = {"random": "Random Sampling",
 
 n_queries = history.pop("n_queries")
 for alg, alg_data in history.items():
+    if alg == "random":
+        continue
     plt.plot(n_queries, alg_data, label=pretty_names.get(alg, alg))
 
 plt.legend()
