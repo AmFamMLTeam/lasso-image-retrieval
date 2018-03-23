@@ -37,9 +37,18 @@ train_i = train_negative_i + train_positive_i_sample
 X_train_fc = X_train_fc[train_i]
 y_train = y_train[train_i]
 
+from lasso_ir.utils import debug
+
+debug(f'number of examples: {len(y_train)}')
+debug(f'number of positive examples: {len(np.argwhere(y_train == 1))}')
+
 # clean up uneccessary ones to save memory
 del X_train_fc1
 del X_train_fc2
 del X_test_fc
 del X_test_fc1
 del X_test_fc2
+del train_i
+del train_negative_i
+del train_positive_i
+del train_positive_i_sample

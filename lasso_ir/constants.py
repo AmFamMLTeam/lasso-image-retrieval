@@ -8,7 +8,7 @@ MACHINES = {0, 1, 8, 9}
 
 # These are the constants you want to play with
 ###
-MAX_N_CIFAR_TRAIN = 500
+MAX_N_CIFAR_TRAIN = 2000
 CIFAR_POSITIVE_CLASSES = CATS
 MULTIPROCESSING = False
 DOWNSAMPLE_POSITIVE = 10  # e.g. 10 to downsample to 1/10th the number of positive examples
