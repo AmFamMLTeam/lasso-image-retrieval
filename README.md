@@ -62,6 +62,24 @@ optional arguments:
                         '0319-1343plot.png')
 ```
 
+#### `python scripts/gen_time_figure.py` 
+
+```
+usage: gen_time_figure.py [-h] [-o OUTPUT] JSON
+
+A script to generate a plot of time per query vs number of queries.
+
+positional arguments:
+JSON                  history json file (output from run_experiment.py)
+
+optional arguments:
+-h, --help            show this help message and exit
+-o OUTPUT, --output OUTPUT
+output file. default: timestamp (e.g.
+'0319-1343plot.png')
+```
+
+
 ## Configure the Scripts
 
 There are a few things you need to manually configure right now.
@@ -86,5 +104,7 @@ $ python scripts/gen_n_figure.py examplehistory.json -o n_positives
 saving figure to n_positives.png
 $ python scripts/gen_sparse_figure.py examplehistory.json -o n_sparse
 saving figure to n_sparse.png
+$ python scripts/gen_time_figure.py examplehistory.json -o n_time
+saving figure to n_time.png
 ```
 
