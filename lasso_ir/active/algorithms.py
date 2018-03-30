@@ -7,7 +7,7 @@ from sklearn.model_selection import GridSearchCV
 from lasso_ir.features import X, y
 from lasso_ir.constants import MULTIPROCESSING
 from lasso_ir.models import NLogisticRegression, MarginalRegression
-
+import time
 
 class BaseAlgorithm:
     """
@@ -52,6 +52,7 @@ class NearestNeighbor(BaseAlgorithm):
     name = "nn"
 
     def get_query(self):
+        t = time.time()
         positives = filter(lambda k: self.answers[k] == 1, self.answers.keys())
         target = random.choice(list(positives))
         _X = self.select_features()
@@ -59,6 +60,7 @@ class NearestNeighbor(BaseAlgorithm):
         _X = _X[self.unlabeled]
         dists = np.linalg.norm(_X - x, axis=1)
         best = np.argmin(dists)
+        self.elapsed = time.time() - t
         return self.unlabeled[best]
 
 
@@ -89,9 +91,9 @@ class MargionalNN(NearestNeighbor):
 
     def get_snapshot(self):
         if self.mask is None:
-            return {"coefs": None, "n_nonzero": None}
+            return {"coefs": None, "n_nonzero": None, "elapsed": self.elapsed}
         else:
-            return{"coefs": np.ravel(np.argwhere(self.mask)).tolist(), "n_nonzero": np.count_nonzero(self.mask)}
+            return{"coefs": np.ravel(np.argwhere(self.mask)).tolist(), "n_nonzero": np.count_nonzero(self.mask),  "elapsed": self.elapsed}
 
 
 class MargionalNNPlus(MargionalNN):
@@ -102,7 +104,7 @@ class MargionalNNPlus(MargionalNN):
     def select_features(self):
         labeled = list(self.answers.keys())
         n_trained = len(self.answers)
-        n_positive = sum(self.answers.values())
+        n_positive = list(self.answers.values()).count(1)
         n_negative = n_trained - n_positive
         n_sample = n_positive - n_negative
         unlabeled_sample = []
@@ -110,6 +112,35 @@ class MargionalNNPlus(MargionalNN):
             unlabeled_sample = random.sample(self.unlabeled, n_sample)
         sample = labeled + unlabeled_sample
         _y = [self.answers.get(i, 0) for i in sample]  # default to 0
+        #_y = [self.answers.get(i, -1) for i in sample]  # default to -1
+        if can_fit(_y):
+            _X = X[sample]
+            self.mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
+            return X[:, self.mask]
+        else:
+            return X
+
+class MargionalNNPlusPlus(MargionalNN):
+    @property
+    def name(self):
+        return f"nn-marginalplusplus-{self.N}"
+    
+    def select_features(self):
+        labeled = list(self.answers.keys())
+        n_trained = len(self.answers)
+        n_positive = list(self.answers.values()).count(1)
+        n_negative = n_trained - n_positive
+        n_sample = n_positive - n_negative
+        unlabeled_sample = []
+        if 0 < n_sample <= len(self.unlabeled):
+            unlabeled_sample = random.sample(self.unlabeled, n_sample)
+            sample = labeled + unlabeled_sample
+        else:
+            sample = [i for i in labeled if self.answers[i] == 1]
+            neg_sample = [i for i in labeled if self.answers[i] != 1]
+            sample = sample + random.sample(neg_sample, n_positive)
+        _y = [self.answers.get(i, 0) for i in sample]  # default to 0
+        #_y = [self.answers.get(i, -1) for i in sample]  # default to -1
         if can_fit(_y):
             _X = X[sample]
             self.mask = MarginalRegression().fit(_X, _y).topfeatures(int(n_trained / self.N))
@@ -155,9 +186,63 @@ class LassoNN(NearestNeighbor):
 
     def get_snapshot(self):
         if self.coefs is None:
-            return {"coefs": None, "n_nonzero": None, "C": None}
+            return {"coefs": None, "n_nonzero": None, "C": None, "elapsed": self.elapsed}
         else:
-            return{"coefs": self.coefs.tolist(), "n_nonzero": np.count_nonzero(self.coefs), "C": self.C}
+            return{"coefs": self.coefs.tolist(), "n_nonzero": np.count_nonzero(self.coefs), "C": self.C, "elapsed": self.elapsed}
+
+
+class LassoNNPlus(NearestNeighbor):
+    """
+        Nearest Neighbor but uses LASSO to select the features plus samples balanced
+        """
+    name = "nn-lasso-plus"
+    
+    def __init__(self, seed, N=1):
+        self.coefs = None
+        self.C = .1
+        self.N = N
+        super().__init__(seed)
+    
+    def scoring(self):
+        return sparsity_score
+    
+    def select_features(self):
+        labeled = list(self.answers.keys())
+        labeled = list(self.answers.keys())
+        n_trained = len(self.answers)
+        n_positive = sum(self.answers.values())
+        n_negative = n_trained - n_positive
+        n_sample = n_positive - n_negative
+        unlabeled_sample = []
+        if 0 < n_sample <= len(self.unlabeled):
+            unlabeled_sample = random.sample(self.unlabeled, n_sample)
+        sample = labeled + unlabeled_sample
+        _y = [self.answers.get(i, 0) for i in sample]  # default to 0
+        #_y = [self.answers.get(i, -1) for i in sample]  # default to -1
+        if can_fit(_y):
+            _X = X[sample]
+            Cs = [self.C*2**n for n in range(-2, 3)] + [.1*2**n for n in range(-2, 3)]
+            Cs = list(set(Cs))
+            if MULTIPROCESSING:
+                n_jobs = 1
+            else:
+                n_jobs = -1
+            search = GridSearchCV(NLogisticRegression(N=self.N, penalty="l1", class_weight="balanced"), param_grid={"C": Cs}, scoring=self.scoring(), n_jobs=n_jobs, refit=True)
+            model = search.fit(_X, _y).best_estimator_
+            self.coefs = model.coef_
+            self.C = model.get_params()["C"]
+            mask = np.ravel(model.coef_.astype(bool))
+            return X[:, mask]
+        else:
+            return X
+
+def get_snapshot(self):
+    if self.coefs is None:
+        return {"coefs": None, "n_nonzero": None, "C": None, "elapsed": self.elapsed}
+    else:
+        return{"coefs": self.coefs.tolist(), "n_nonzero": np.count_nonzero(self.coefs), "C": self.C, "elapsed": self.elapsed}
+
+
 
 
 class NLassoNN(LassoNN):
