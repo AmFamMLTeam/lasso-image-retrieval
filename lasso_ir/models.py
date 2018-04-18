@@ -17,7 +17,7 @@ class MarginalRegression(LinearModel, RegressorMixin):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', UserWarning)
             X = preprocessing.scale(X)
-        self.coef_ = np.dot(X.T, y)
+        self.coef_ = np.dot(X.T, y)/len(y)
         return self
 
     def topfeatures(self, k=None):
@@ -26,8 +26,11 @@ class MarginalRegression(LinearModel, RegressorMixin):
         k = k or self.n_trained
         # sort coefficients highest to lowest
         topk_indices = np.argsort(-np.abs(self.coef_))[:k]
-        mask = np.zeros(len(self.coef_), dtype=bool)
-        mask[topk_indices] = True
+        mask = np.zeros(len(self.coef_))
+        #print(self.coef_[topk_indices])
+        mask[topk_indices] = self.coef_[topk_indices]#np.exp(1*np.abs(self.coef_[topk_indices]))
+        #mask[topk_indices] /= sum(mask[topk_indices])
+        #print(mask[topk_indices])
         return mask
 
 
